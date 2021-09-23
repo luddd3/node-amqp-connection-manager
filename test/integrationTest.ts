@@ -1,9 +1,10 @@
-import { ConfirmChannel, ConsumeMessage } from 'amqplib';
+import { ConsumeMessage } from 'amqplib';
 import chai from 'chai';
 import chaiJest from 'chai-jest';
 import pEvent from 'p-event';
 import { defer, timeout } from 'promise-tools';
 import amqp, { AmqpConnectionManagerClass as AmqpConnectionManager } from '../src';
+import type { Channel } from '../src'
 import { IAmqpConnectionManager } from '../src/AmqpConnectionManager';
 
 chai.use(chaiJest);
@@ -92,7 +93,7 @@ describe('Integration tests', () => {
         // Ask the connection manager for a ChannelWrapper.  Specify a setup function to
         // run every time we reconnect to the broker.
         const sendChannel = connection.createChannel({
-            setup: async (channel: ConfirmChannel) => {
+            setup: async (channel: Channel) => {
                 await channel.assertQueue(queueName, { durable: false, autoDelete: true });
             },
         });
@@ -100,7 +101,7 @@ describe('Integration tests', () => {
         const rxPromise = defer<ConsumeMessage>();
 
         const receiveWrapper = connection.createChannel({
-            setup: async (channel: ConfirmChannel) => {
+            setup: async (channel: Channel) => {
                 // `channel` here is a regular amqplib `ConfirmChannel`.
                 // Note that `this` here is the channelWrapper instance.
                 await channel.assertQueue(queueName, { durable: false, autoDelete: true });
@@ -148,7 +149,7 @@ describe('Integration tests', () => {
         // Ask the connection manager for a ChannelWrapper.  Specify a setup function to
         // run every time we reconnect to the broker.
         const rpcClient = connection.createChannel({
-            setup: async (channel: ConfirmChannel) => {
+            setup: async (channel: Channel) => {
                 const qok = await channel.assertQueue('', { exclusive: true });
                 rpcClientQueueName = qok.queue;
 
@@ -163,7 +164,7 @@ describe('Integration tests', () => {
         });
 
         const rpcServer = connection.createChannel({
-            setup: async (channel: ConfirmChannel) => {
+            setup: async (channel: Channel) => {
                 await channel.assertQueue(queueName, { durable: false, autoDelete: true });
                 await channel.prefetch(1);
                 await channel.consume(
@@ -217,7 +218,7 @@ describe('Integration tests', () => {
         // Ask the connection manager for a ChannelWrapper.  Specify a setup function to
         // run every time we reconnect to the broker.
         const rpcClient = connection.createChannel({
-            setup: async (channel: ConfirmChannel) => {
+            setup: async (channel: Channel) => {
                 await channel.consume(
                     rpcClientQueueName,
                     (message) => {
@@ -229,7 +230,7 @@ describe('Integration tests', () => {
         });
 
         const rpcServer = connection.createChannel({
-            setup: async (channel: ConfirmChannel) => {
+            setup: async (channel: Channel) => {
                 await channel.assertQueue(queueName, { durable: false, autoDelete: true });
                 await channel.prefetch(1);
                 await channel.consume(

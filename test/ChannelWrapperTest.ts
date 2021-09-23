@@ -7,6 +7,7 @@ import chaiJest from 'chai-jest';
 import chaiString from 'chai-string';
 import * as promiseTools from 'promise-tools';
 import ChannelWrapper, { SetupFunc } from '../src/ChannelWrapper';
+import type { Channel } from '../src/ChannelWrapper'
 import * as fixtures from './fixtures';
 
 chai.use(chaiString);
@@ -421,7 +422,7 @@ describe('ChannelWrapper', function () {
     it('should run all setup messages prior to sending any queued messages', function () {
         const order: string[] = [];
 
-        const setup: SetupFunc = function (channel: amqplib.ConfirmChannel) {
+        const setup: SetupFunc = function (channel: Channel) {
             order.push('setup');
 
             // Since this should get run before anything gets sent, this is where we need to add listeners to the
@@ -671,7 +672,7 @@ describe('ChannelWrapper', function () {
     it('should reject messages if they get rejected by the broker', async function () {
         connectionManager.simulateConnect();
         const channelWrapper = new ChannelWrapper(connectionManager, {
-            setup(channel: amqplib.ConfirmChannel) {
+            setup(channel: Channel) {
                 channel.publish = (
                     _exchange: string,
                     _routingKey: string,
@@ -708,7 +709,7 @@ describe('ChannelWrapper', function () {
         }[] = [];
 
         const channelWrapper = new ChannelWrapper(connectionManager, {
-            setup(channel: amqplib.ConfirmChannel) {
+            setup(channel: Channel) {
                 channel.publish = (
                     _exchange: string,
                     _routingKey: string,
@@ -752,7 +753,7 @@ describe('ChannelWrapper', function () {
 
         connectionManager.simulateConnect();
         const channelWrapper = new ChannelWrapper(connectionManager, {
-            setup(channel: amqplib.ConfirmChannel) {
+            setup(channel: Channel) {
                 channel.publish = function (
                     _exchange: string,
                     _routingKey: string,
@@ -791,7 +792,7 @@ describe('ChannelWrapper', function () {
 
         connectionManager.simulateConnect();
         const channelWrapper = new ChannelWrapper(connectionManager, {
-            setup(channel: amqplib.ConfirmChannel) {
+            setup(channel: Channel) {
                 channel.publish = function (
                     _exchange: string,
                     _routingKey: string,
@@ -831,7 +832,7 @@ describe('ChannelWrapper', function () {
 
         connectionManager.simulateConnect();
         const channelWrapper = new ChannelWrapper(connectionManager, {
-            setup(channel: amqplib.ConfirmChannel) {
+            setup(channel: Channel) {
                 channel.publish = function (
                     _exchange: string,
                     _routingKey: string,
@@ -871,7 +872,7 @@ describe('ChannelWrapper', function () {
         const err = new Error('AMQP Frame Syntax Error');
         (err as any).code = 502;
         const channelWrapper = new ChannelWrapper(connectionManager, {
-            setup(channel: amqplib.ConfirmChannel) {
+            setup(channel: Channel) {
                 channel.publish = function (
                     _exchange: string,
                     _routingKey: string,
@@ -903,7 +904,7 @@ describe('ChannelWrapper', function () {
         const err = new Error('AMQP Frame Syntax Error');
         (err as any).code = 320;
         const channelWrapper = new ChannelWrapper(connectionManager, {
-            setup(channel: amqplib.ConfirmChannel) {
+            setup(channel: Channel) {
                 channel.publish = function (
                     _exchange: string,
                     _routingKey: string,
@@ -940,7 +941,7 @@ describe('ChannelWrapper', function () {
     it('should publish queued messages to the underlying channel without waiting for confirms', async function () {
         connectionManager.simulateConnect();
         const channelWrapper = new ChannelWrapper(connectionManager, {
-            setup(channel: amqplib.ConfirmChannel) {
+            setup(channel: Channel) {
                 channel.publish = jest.fn().mockImplementation(() => true);
                 return Promise.resolve();
             },
@@ -963,7 +964,7 @@ describe('ChannelWrapper', function () {
 
         connectionManager.simulateConnect();
         const channelWrapper = new ChannelWrapper(connectionManager, {
-            async setup(channel: amqplib.ConfirmChannel) {
+            async setup(channel: Channel) {
                 innerChannel = channel;
                 channel.publish = jest
                     .fn()
@@ -1000,7 +1001,7 @@ describe('ChannelWrapper', function () {
 
         connectionManager.simulateConnect();
         const channelWrapper = new ChannelWrapper(connectionManager, {
-            async setup(channel: amqplib.ConfirmChannel) {
+            async setup(channel: Channel) {
                 channel.consume = jest.fn().mockImplementation((_queue, onMsg, _options) => {
                     onMessage = onMsg;
                     return Promise.resolve({ consumerTag: 'abc' });
@@ -1030,7 +1031,7 @@ describe('ChannelWrapper', function () {
 
         connectionManager.simulateConnect();
         const channelWrapper = new ChannelWrapper(connectionManager, {
-            async setup(channel: amqplib.ConfirmChannel) {
+            async setup(channel: Channel) {
                 channel.consume = jest.fn().mockImplementation((_queue, onMsg, _options) => {
                     onMessage = onMsg;
                     return Promise.resolve({ consumerTag: `${consumerTag++}` });
@@ -1067,7 +1068,7 @@ describe('ChannelWrapper', function () {
 
         connectionManager.simulateConnect();
         const channelWrapper = new ChannelWrapper(connectionManager, {
-            async setup(channel: amqplib.ConfirmChannel) {
+            async setup(channel: Channel) {
                 channel.prefetch = prefetchFn;
                 channel.consume = jest.fn().mockImplementation((queue, onMsg, _options) => {
                     if (queue === 'queue1') {
@@ -1121,7 +1122,7 @@ describe('ChannelWrapper', function () {
 
         connectionManager.simulateConnect();
         const channelWrapper = new ChannelWrapper(connectionManager, {
-            async setup(channel: amqplib.ConfirmChannel) {
+            async setup(channel: Channel) {
                 channel.consume = jest.fn().mockImplementation((queue, onMsg, _options) => {
                     if (queue === 'queue1') {
                         onQueue1 = onMsg;
